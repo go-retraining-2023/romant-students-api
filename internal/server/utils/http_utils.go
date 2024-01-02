@@ -12,7 +12,7 @@ func WriteString(w http.ResponseWriter, value string) {
 
 func RetrieveStudentId(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
 	// getting student id from url
-	idString := r.URL.Path[len("/api/students/"):]
+	idString := r.URL.Path[len("/api/v1/students/"):]
 	studentId, err := uuid.Parse(idString)
 	if err != nil {
 		http.Error(w, "Ivalid student identifier", http.StatusBadRequest)

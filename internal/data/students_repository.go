@@ -172,12 +172,12 @@ func (repo StudentsRepository) DeleteStudent(id string) bool {
 
 	key := getStudentKeyMap(id)
 
-	_, err := dbClient.DeleteItem(
+	deleteOutput, err := dbClient.DeleteItem(
 		context.TODO(),
 		&dynamodb.DeleteItemInput{
 			TableName: aws.String(TABLE_NAME),
 			Key:       key,
 		})
 
-	return err == nil
+	return err == nil && deleteOutput != nil
 }

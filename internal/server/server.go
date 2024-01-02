@@ -4,40 +4,26 @@ import (
 	"net/http"
 
 	handlers "github.com/RomanTykhyi/students-api/internal/server/handlers"
-	utils "github.com/RomanTykhyi/students-api/internal/server/utils"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func StartServer() {
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 
-	mux.HandleFunc("/api/students", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			handlers.QueryStudents(w, r)
-		case "POST":
-			handlers.CreateStudent(w, r)
-		default:
-			utils.WriteString(w, "Unsupported method")
-		}
+	r.Use(middleware.Logger)
+
+	r.Route("/api/v1/students", func(r chi.Router) {
+		r.Get("/", handlers.QueryStudents)
+		r.Post("/", handlers.CreateStudent)
+
+		// subroute
+		r.Route("/{studentId}", func(r chi.Router) {
+			r.Get("/", handlers.GetStudent)
+			r.Put("/", handlers.UpdateStudent)
+			r.Delete("/", handlers.DeleteStudent)
+		})
 	})
 
-	mux.HandleFunc("/api/students/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			handlers.GetStudent(w, r)
-		case http.MethodPut:
-			handlers.UpdateStudent(w, r)
-		case http.MethodDelete:
-			handlers.DeleteStudent(w, r)
-		default:
-			utils.WriteString(w, "Unsupported method")
-		}
-	})
-
-	server := &http.Server{
-		Addr:    ":8081",
-		Handler: mux,
-	}
-
-	server.ListenAndServe()
+	http.ListenAndServe(":8081", r)
 }

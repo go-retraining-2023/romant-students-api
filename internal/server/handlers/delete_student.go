@@ -6,19 +6,23 @@ import (
 	"github.com/RomanTykhyi/students-api/internal/data"
 	"github.com/RomanTykhyi/students-api/internal/di"
 	utils "github.com/RomanTykhyi/students-api/internal/server/utils"
+	"github.com/go-chi/chi/v5"
 )
 
-func DeleteStudent(w http.ResponseWriter, r *http.Request) bool {
+func DeleteStudent(w http.ResponseWriter, r *http.Request) {
 	repo, err := di.GetAppContainer().Resolve("students-store")
 	if err != nil {
 		panic("Cannot get students repository")
 	}
 	studentsRepo := repo.(data.StudentsStore)
 
-	studentId, err := utils.RetrieveStudentId(w, r)
-	if err != nil {
-		return false
-	}
+	studentId := chi.URLParam(r, "id")
 
-	return studentsRepo.DeleteStudent(studentId.String())
+	deleted := studentsRepo.DeleteStudent(studentId)
+	if deleted {
+		w.WriteHeader(http.StatusNoContent)
+		utils.WriteString(w, "Deleted successfully")
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/RomanTykhyi/students-api/internal/data"
 	"github.com/RomanTykhyi/students-api/internal/di"
 	"github.com/RomanTykhyi/students-api/internal/models"
-	utils "github.com/RomanTykhyi/students-api/internal/server/utils"
+	"github.com/go-chi/chi/v5"
 )
 
 func UpdateStudent(w http.ResponseWriter, r *http.Request) {
@@ -23,14 +23,11 @@ func UpdateStudent(w http.ResponseWriter, r *http.Request) {
 
 	fullName := r.PostForm["FullName"][0]
 
-	studentId, err := utils.RetrieveStudentId(w, r)
-	if err != nil {
-		return
-	}
+	studentId := chi.URLParam(r, "id")
 
 	student := models.Student{
 		PartitionId: "students",
-		Id:          studentId.String(),
+		Id:          studentId,
 		FullName:    fullName,
 	}
 
