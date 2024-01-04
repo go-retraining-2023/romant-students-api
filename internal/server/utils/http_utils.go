@@ -6,8 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
-func WriteString(w http.ResponseWriter, value string) {
-	w.Write([]byte(value))
+func WriteString(w http.ResponseWriter, message string) {
+	w.Write([]byte(message))
+}
+
+func WriteError(w http.ResponseWriter, message string, httpStatusCode int) {
+	w.WriteHeader(httpStatusCode)
+	WriteString(w, message)
 }
 
 func RetrieveStudentId(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {

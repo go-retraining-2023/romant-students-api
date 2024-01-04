@@ -15,6 +15,7 @@ import (
 )
 
 const TABLE_NAME = "Students"
+const PARTITION = "students"
 
 func retrieveDynamoClient() *dynamodb.Client {
 	client, err := di.GetAppContainer().Resolve("dynamo-client")
@@ -25,7 +26,7 @@ func retrieveDynamoClient() *dynamodb.Client {
 }
 
 func getStudentKeyMap(studentId string) map[string]types.AttributeValue {
-	partitionId, err := attributevalue.Marshal("students")
+	partitionId, err := attributevalue.Marshal(PARTITION)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,7 +40,7 @@ func getStudentKeyMap(studentId string) map[string]types.AttributeValue {
 }
 
 type StudentsStore interface {
-	PutStudent(student *models.Student)
+	PutStudent(student *models.Student) error
 	QueryStudents() []models.Student
 	GetStudent(id string) *models.Student
 	UpdateStudent(student *models.Student) *models.Student
@@ -48,12 +49,13 @@ type StudentsStore interface {
 
 type StudentsRepository struct{}
 
-func (repo StudentsRepository) PutStudent(student *models.Student) {
+func (repo StudentsRepository) PutStudent(student *models.Student) error {
 	dbClient := retrieveDynamoClient()
 
+	student.PartitionId = PARTITION
 	studentJson, err := attributevalue.MarshalMap(student)
 	if err != nil {
-		log.Fatal("Cant serialize the student to json.")
+		return err
 	}
 
 	fmt.Printf("%v", studentJson)
@@ -68,10 +70,12 @@ func (repo StudentsRepository) PutStudent(student *models.Student) {
 	)
 
 	if err != nil {
-		log.Fatal("Error while inserting the student.")
+		return err
 	}
 
 	fmt.Printf("Successfully inserted: %v", putOutput)
+
+	return nil
 }
 
 func (repo StudentsRepository) QueryStudents() []models.Student {
@@ -80,7 +84,7 @@ func (repo StudentsRepository) QueryStudents() []models.Student {
 	var response *dynamodb.QueryOutput
 	var students []models.Student
 
-	keyExpression := expression.Key("PartitionId").Equal(expression.Value("students"))
+	keyExpression := expression.Key("PartitionId").Equal(expression.Value(PARTITION))
 	expr, err := expression.NewBuilder().WithKeyCondition(keyExpression).Build()
 	if err != nil {
 		log.Fatal("Error building students query.")

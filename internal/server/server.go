@@ -17,6 +17,12 @@ func StartServer() {
 		r.Get("/", handlers.QueryStudents)
 		r.Post("/", handlers.CreateStudent)
 
+		// import
+		r.Post("/import", handlers.ImportStudents)
+
+		// export
+		r.Get("/export", handlers.ExportStudents)
+
 		// subroute
 		r.Route("/{studentId}", func(r chi.Router) {
 			r.Get("/", handlers.GetStudent)
