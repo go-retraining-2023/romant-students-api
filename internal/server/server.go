@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	handlers "github.com/RomanTykhyi/students-api/internal/server/handlers"
@@ -8,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func StartServer() {
+func StartServer(port int) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -31,5 +32,5 @@ func StartServer() {
 		})
 	})
 
-	http.ListenAndServe(":8081", r)
+	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }

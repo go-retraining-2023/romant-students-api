@@ -6,6 +6,7 @@ import (
 
 	"github.com/RomanTykhyi/students-api/internal/data"
 	"github.com/RomanTykhyi/students-api/internal/di"
+	utils "github.com/RomanTykhyi/students-api/internal/server/utils"
 )
 
 func QueryStudents(w http.ResponseWriter, r *http.Request) {
@@ -16,6 +17,10 @@ func QueryStudents(w http.ResponseWriter, r *http.Request) {
 	studentsRepo := repo.(data.StudentsStore)
 
 	students := studentsRepo.QueryStudents()
+	if students == nil {
+		utils.WriteError(w, "Error occured", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(students)

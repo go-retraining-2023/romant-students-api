@@ -16,7 +16,7 @@ func DeleteStudent(w http.ResponseWriter, r *http.Request) {
 	}
 	studentsRepo := repo.(data.StudentsStore)
 
-	studentId := chi.URLParam(r, "id")
+	studentId := chi.URLParam(r, "studentId")
 
 	deleted := studentsRepo.DeleteStudent(studentId)
 	if deleted {

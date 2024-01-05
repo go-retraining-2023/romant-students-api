@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local
+    ports:
+      - "8127:8000"
+    user: root
+    volumes:
+      - dynamodb_data:/dynamodb_local_db
+    command: '-jar DynamoDBLocal.jar -sharedDb -dbPath /dynamodb_local_db'
+
+  students-api:
+    build:
+      context: ..
+    depends_on:
+      - dynamodb-local
+    ports:
+      - "8082:8081"
+    environment:
+      DYNAMODB_URL: http://dynamodb-local:8000
+
+volumes:
+  dynamodb_data:

@@ -18,7 +18,7 @@ func GetStudent(w http.ResponseWriter, r *http.Request) {
 
 	studentsRepo := repo.(data.StudentsStore)
 
-	studentId := chi.URLParam(r, "id")
+	studentId := chi.URLParam(r, "studentId")
 
 	student := studentsRepo.GetStudent(studentId)
 	if student == nil {

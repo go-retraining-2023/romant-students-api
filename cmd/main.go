@@ -10,9 +10,9 @@ func main() {
 
 	appContainer := di.GetAppContainer()
 
-	dynamoClient := data.CreateLocalClient(8127)
+	dynamoClient := data.CreateLocalClient()
 	appContainer.Register("dynamo-client", dynamoClient)                // dynamodb client
 	appContainer.Register("students-store", &data.StudentsRepository{}) // repository
 
-	server.StartServer()
+	server.StartServer(8081)
 }

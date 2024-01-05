@@ -98,7 +98,8 @@ func (repo StudentsRepository) QueryStudents() []models.Student {
 	})
 
 	if err != nil {
-		log.Fatal("Error while querying students.")
+		log.Printf("Error occured: %v", err)
+		return nil
 	}
 
 	err = attributevalue.UnmarshalListOfMaps(response.Items, &students)
