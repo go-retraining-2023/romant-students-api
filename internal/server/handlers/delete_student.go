@@ -20,8 +20,7 @@ func DeleteStudent(w http.ResponseWriter, r *http.Request) {
 
 	deleted := studentsRepo.DeleteStudent(studentId)
 	if deleted {
-		w.WriteHeader(http.StatusNoContent)
-		utils.WriteString(w, "Deleted successfully")
+		utils.WriteMessageResponse(w, "Deleted successfully", http.StatusNoContent)
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 	}

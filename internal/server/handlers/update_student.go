@@ -1,12 +1,12 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/RomanTykhyi/students-api/internal/data"
 	"github.com/RomanTykhyi/students-api/internal/di"
 	"github.com/RomanTykhyi/students-api/internal/models"
+	utils "github.com/RomanTykhyi/students-api/internal/server/utils"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -18,7 +18,8 @@ func UpdateStudent(w http.ResponseWriter, r *http.Request) {
 	studentsRepo := repo.(data.StudentsStore)
 
 	if err := r.ParseForm(); err != nil {
-		w.Write([]byte("Failed to parse from..."))
+		utils.WriteMessageResponse(w, "Failed to parse form", http.StatusInternalServerError)
+		return
 	}
 
 	fullName := r.PostForm["FullName"][0]
@@ -32,6 +33,5 @@ func UpdateStudent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	studentsRepo.UpdateStudent(&student)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(student)
+	utils.WriteJsonResponse(w, student)
 }

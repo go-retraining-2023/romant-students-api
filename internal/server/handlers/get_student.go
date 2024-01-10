@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/RomanTykhyi/students-api/internal/data"
@@ -22,11 +21,9 @@ func GetStudent(w http.ResponseWriter, r *http.Request) {
 
 	student := studentsRepo.GetStudent(studentId)
 	if student == nil {
-		w.WriteHeader(http.StatusNotFound)
-		utils.WriteString(w, "Student not found.")
+		utils.WriteMessageResponse(w, "Student not found.", http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(student)
+	utils.WriteJsonResponse(w, student)
 }

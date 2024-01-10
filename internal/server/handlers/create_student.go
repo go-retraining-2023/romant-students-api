@@ -18,7 +18,8 @@ func CreateStudent(w http.ResponseWriter, r *http.Request) {
 	studentsRepo := repo.(data.StudentsStore)
 
 	if err := r.ParseForm(); err != nil {
-		w.Write([]byte("Failed to parse from..."))
+		utils.WriteMessageResponse(w, "Failed to parse form...", http.StatusBadRequest)
+		return
 	}
 
 	fullName := r.PostForm["FullName"][0]
@@ -29,7 +30,12 @@ func CreateStudent(w http.ResponseWriter, r *http.Request) {
 		FullName:    fullName,
 	}
 
-	studentsRepo.PutStudent(&student)
+	err = studentsRepo.PutStudent(&student)
+	if err != nil {
+		utils.WriteMessageResponse(w, "Error putting student.", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	utils.WriteString(w, student.Id)
 }

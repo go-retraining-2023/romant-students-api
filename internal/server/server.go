@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	handlers "github.com/RomanTykhyi/students-api/internal/server/handlers"
@@ -32,5 +33,8 @@ func StartServer(port int) {
 		})
 	})
 
-	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), r)
+	if err != nil {
+		log.Fatal("Error starting the http server.")
+	}
 }

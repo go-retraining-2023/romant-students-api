@@ -17,35 +17,35 @@ func ImportStudents(w http.ResponseWriter, r *http.Request) {
 	// getting repo from di container
 	repo, err := di.GetAppContainer().Resolve("students-store")
 	if err != nil {
-		utils.WriteError(w, "Could not get the students store.", http.StatusInternalServerError)
+		utils.WriteMessageResponse(w, "Could not get the students store.", http.StatusInternalServerError)
 		return
 	}
 	studentsRepo := repo.(data.StudentsStore)
 
 	// parsing multipart form file
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
-		utils.WriteError(w, "Could not parse multipart form", http.StatusInternalServerError)
+		utils.WriteMessageResponse(w, "Could not parse multipart form", http.StatusInternalServerError)
 		return
 	}
 
 	// parse and validate file and post parameters
 	file, fileHeader, err := r.FormFile("uploadFile")
 	if err != nil {
-		utils.WriteError(w, "Invalid file", http.StatusBadRequest)
+		utils.WriteMessageResponse(w, "Invalid file", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
 
 	// validating the file size
 	if fileHeader.Size > maxUploadSize {
-		utils.WriteError(w, "The file is too big. Max size is 10 mb", http.StatusBadRequest)
+		utils.WriteMessageResponse(w, "The file is too big. Max size is 10 mb", http.StatusBadRequest)
 		return
 	}
 
 	// checking the content-type
 	contentType := fileHeader.Header.Get("Content-Type")
 	if contentType != "text/csv" {
-		utils.WriteError(w, "Invalid content-type. Only csv import allowed", http.StatusBadRequest)
+		utils.WriteMessageResponse(w, "Invalid content-type. Only csv import allowed", http.StatusBadRequest)
 		return
 	}
 
@@ -53,7 +53,7 @@ func ImportStudents(w http.ResponseWriter, r *http.Request) {
 	fileReader := csv.NewReader(file)
 	records, error := fileReader.ReadAll()
 	if error != nil {
-		utils.WriteError(w, "Error while reading file.", http.StatusInternalServerError)
+		utils.WriteMessageResponse(w, "Error while reading file.", http.StatusInternalServerError)
 		return
 	}
 	records = records[1:]
@@ -67,7 +67,7 @@ func ImportStudents(w http.ResponseWriter, r *http.Request) {
 
 		err := studentsRepo.PutStudent(&student)
 		if err != nil {
-			utils.WriteError(w, "Error while inserting student", http.StatusInternalServerError)
+			utils.WriteMessageResponse(w, "Error while inserting student", http.StatusInternalServerError)
 		}
 	}
 }

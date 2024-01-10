@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/RomanTykhyi/students-api/internal/data"
@@ -18,10 +17,9 @@ func QueryStudents(w http.ResponseWriter, r *http.Request) {
 
 	students := studentsRepo.QueryStudents()
 	if students == nil {
-		utils.WriteError(w, "Error occured", http.StatusInternalServerError)
+		utils.WriteMessageResponse(w, "Error occured", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(students)
+	utils.WriteJsonResponse(w, students)
 }

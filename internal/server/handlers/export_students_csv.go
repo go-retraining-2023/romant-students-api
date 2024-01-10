@@ -33,21 +33,33 @@ func ExportStudents(w http.ResponseWriter, r *http.Request) {
 	// trying to create temporary file
 	f, err := os.CreateTemp("", "students_*.csv")
 	if err != nil {
-		utils.WriteError(w, "Error creating file.", http.StatusInternalServerError)
+		utils.WriteMessageResponse(w, "Error creating file.", http.StatusInternalServerError)
 	}
 
 	defer f.Close()
 
 	// write our records
 	csvWriter := csv.NewWriter(f)
-	csvWriter.WriteAll(records)
+	err = csvWriter.WriteAll(records)
+	if err != nil {
+		utils.WriteMessageResponse(w, "Error on writing the csv data.", http.StatusInternalServerError)
+		return
+	}
 
-	f.Seek(0, io.SeekStart)
+	_, err = f.Seek(0, io.SeekStart)
+	if err != nil {
+		utils.WriteMessageResponse(w, "Error on writing the csv data.", http.StatusInternalServerError)
+		return
+	}
 
 	// downloading the file
 	w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(f.Name()))
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 
-	io.Copy(w, f)
+	_, err = io.Copy(w, f)
+	if err != nil {
+		utils.WriteMessageResponse(w, "Error on writing the csv response.", http.StatusInternalServerError)
+		return
+	}
 	csvWriter.Flush()
 }
