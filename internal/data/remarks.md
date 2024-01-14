@@ -1,0 +1,23 @@
+Обробка помилок: В коді використовується часте викликання log.Fatal для обробки помилок. Це може бути не найкращим підходом, оскільки log.Fatal завершує роботу програми. Краще використовувати повернення помилок замість цього.
+
+Робота з контекстом: У деяких методах не використовується переданий контекст context.TODO(). Додавання контексту до всіх викликів AWS SDK дозволить краще контролювати взаємодію з ними.
+
+Модульність: Функція retrieveDynamoClient використовує пакет di, який може бути прив'язаний до конкретної реалізації, що робить код складним у тестуванні. Краще передавати dynamodb.Client як залежність.
+
+Використання констант: Константи TABLE_NAME та PARTITION можна було б розмістити в структурі StudentsRepository для кращої зрозумілості.
+
+type StudentsRepository struct {
+    dbClient *dynamodb.Client
+    tableName string
+    partition string
+}
+
+func NewStudentsRepository(tableName, partition string, dbClient *dynamodb.Client) *StudentsRepository {
+    return &StudentsRepository{
+        dbClient:   dbClient,
+        tableName:  tableName,
+        partition:  partition,
+    }
+}
+
+// Решта методів будуть використовувати `repo.dbClient` замість `retrieveDynamoClient`
