@@ -5,19 +5,3 @@
 Модульність: Функція retrieveDynamoClient використовує пакет di, який може бути прив'язаний до конкретної реалізації, що робить код складним у тестуванні. Краще передавати dynamodb.Client як залежність.
 
 Використання констант: Константи TABLE_NAME та PARTITION можна було б розмістити в структурі StudentsRepository для кращої зрозумілості.
-
-type StudentsRepository struct {
-    dbClient *dynamodb.Client
-    tableName string
-    partition string
-}
-
-func NewStudentsRepository(tableName, partition string, dbClient *dynamodb.Client) *StudentsRepository {
-    return &StudentsRepository{
-        dbClient:   dbClient,
-        tableName:  tableName,
-        partition:  partition,
-    }
-}
-
-// Решта методів будуть використовувати `repo.dbClient` замість `retrieveDynamoClient`
