@@ -54,6 +54,22 @@ func (repo *StudentsRepository) PutStudent(student *models.Student) error {
 	return nil
 }
 
+
+type StudentsRepository struct {
+    dbClient *dynamodb.Client
+    tableName string
+    partition string
+}
+
+func NewStudentsRepository(tableName, partition string, dbClient *dynamodb.Client) *StudentsRepository {
+    return &StudentsRepository{
+        dbClient:   dbClient,
+        tableName:  tableName,
+        partition:  partition,
+    }
+}
+
+// Решта методів будуть використовувати `repo.dbClient` замість `retrieveDynamoClient`
 // Решта методів будуть використовувати repo.dbClient замість retrieveDynamoClient
 
 //...
