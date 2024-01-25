@@ -18,9 +18,14 @@ func DeleteStudent(w http.ResponseWriter, r *http.Request) {
 
 	studentId := chi.URLParam(r, "studentId")
 
-	deleted := studentsRepo.DeleteStudent(studentId)
+	deleted, err := studentsRepo.DeleteStudent(studentId)
+	if err != nil {
+		utils.WriteMessageResponse(w, "Error while deleting.", http.StatusInternalServerError)
+		return
+	}
+
 	if deleted {
-		utils.WriteMessageResponse(w, "Deleted successfully", http.StatusNoContent)
+		utils.WriteMessageResponse(w, "Deleted successfully.", http.StatusNoContent)
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 	}

@@ -1,18 +1,15 @@
 package main
 
 import (
-	"github.com/RomanTykhyi/students-api/internal/data"
-	"github.com/RomanTykhyi/students-api/internal/di"
+	"github.com/RomanTykhyi/students-api/config"
+	"github.com/RomanTykhyi/students-api/internal/common"
 	"github.com/RomanTykhyi/students-api/internal/server"
 )
 
+func init() {
+	common.Init()
+}
+
 func main() {
-
-	appContainer := di.GetAppContainer()
-
-	dynamoClient := data.CreateLocalClient()
-	appContainer.Register("dynamo-client", dynamoClient)                // dynamodb client
-	appContainer.Register("students-store", &data.StudentsRepository{}) // repository
-
-	server.StartServer(8081)
+	server.StartServer(config.GetAppConfig().HttpPort)
 }

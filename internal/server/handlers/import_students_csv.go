@@ -68,6 +68,7 @@ func ImportStudents(w http.ResponseWriter, r *http.Request) {
 		err := studentsRepo.PutStudent(&student)
 		if err != nil {
 			utils.WriteMessageResponse(w, "Error while inserting student", http.StatusInternalServerError)
+			return
 		}
 	}
 }

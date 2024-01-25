@@ -1,0 +1,96 @@
+service: students-api-serverless
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  region: eu-north-1
+
+functions:
+  export-students:
+    runtime: provided.al2023
+    handler: bootstrap
+    environment: 
+      DYNAMODB_URL: http://dynamodb-local:8000
+    events:
+      - http:
+          path: students/export
+          method: GET
+    package:
+      artifact: lambda/export-students/export-students.zip
+
+  import-students:
+    runtime: provided.al2023
+    handler: bootstrap
+    environment: 
+      DYNAMODB_URL: http://dynamodb-local:8000
+    events:
+      - http:
+          path: students/import
+          method: POST
+    package:
+      artifact: lambda/import-students/import-students.zip
+
+  query-students:
+    runtime: provided.al2023
+    handler: bootstrap
+    environment: 
+      DYNAMODB_URL: http://dynamodb-local:8000
+    events:
+      - http:
+          path: students
+          method: GET
+    package:
+      artifact: lambda/query-students/query-students.zip
+
+  create-student:
+    runtime: provided.al2023
+    handler: bootstrap
+    environment: 
+      DYNAMODB_URL: http://dynamodb-local:8000
+    events:
+      - http:
+          path: students
+          method: POST
+    package:
+      artifact: lambda/create-student/create-student.zip
+
+  update-student:
+    runtime: provided.al2023
+    handler: bootstrap
+    environment: 
+      DYNAMODB_URL: http://dynamodb-local:8000
+    events:
+      - http:
+          path: students/{studentId}
+          method: PUT
+    package:
+      artifact: lambda/update-student/update-student.zip
+
+  delete-student:
+    runtime: provided.al2023
+    handler: bootstrap
+    environment: 
+      DYNAMODB_URL: http://dynamodb-local:8000
+    events:
+      - http:
+          path: students/{studentId}
+          method: DELETE
+    package:
+      artifact: lambda/delete-student/delete-student.zip
+
+  get-student:
+    runtime: provided.al2023
+    handler: bootstrap
+    environment: 
+      DYNAMODB_URL: http://dynamodb-local:8000
+    events:
+      - http:
+          path: students/{studentId}
+          method: GET
+    package:
+      artifact: lambda/get-student/get-student.zip
+
+plugins:
+  - serverless-localstack

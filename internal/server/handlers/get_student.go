@@ -19,7 +19,12 @@ func GetStudent(w http.ResponseWriter, r *http.Request) {
 
 	studentId := chi.URLParam(r, "studentId")
 
-	student := studentsRepo.GetStudent(studentId)
+	student, err := studentsRepo.GetStudent(studentId)
+	if err != nil {
+		utils.WriteMessageResponse(w, "Error getting student.", http.StatusInternalServerError)
+		return
+	}
+
 	if student == nil {
 		utils.WriteMessageResponse(w, "Student not found.", http.StatusNotFound)
 		return

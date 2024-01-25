@@ -36,6 +36,5 @@ func CreateStudent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	utils.WriteString(w, student.Id)
+	utils.WriteMessageResponse(w, student.Id, http.StatusCreated)
 }

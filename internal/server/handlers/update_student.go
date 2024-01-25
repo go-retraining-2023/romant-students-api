@@ -32,6 +32,11 @@ func UpdateStudent(w http.ResponseWriter, r *http.Request) {
 		FullName:    fullName,
 	}
 
-	studentsRepo.UpdateStudent(&student)
+	_, err = studentsRepo.UpdateStudent(&student)
+	if err != nil {
+		utils.WriteMessageResponse(w, "Failed to update student.", http.StatusInternalServerError)
+		return
+	}
+
 	utils.WriteJsonResponse(w, student)
 }

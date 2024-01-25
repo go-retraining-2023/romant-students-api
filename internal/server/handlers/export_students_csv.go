@@ -20,7 +20,11 @@ func ExportStudents(w http.ResponseWriter, r *http.Request) {
 	studentsRepo := repo.(data.StudentsStore)
 
 	// get students
-	students := studentsRepo.QueryStudents()
+	students, err := studentsRepo.QueryStudents()
+	if err != nil {
+		utils.WriteMessageResponse(w, "Error querying students.", http.StatusInternalServerError)
+		return
+	}
 
 	// parse to csv
 	records := [][]string{{"Id", "FullName"}}
@@ -34,6 +38,7 @@ func ExportStudents(w http.ResponseWriter, r *http.Request) {
 	f, err := os.CreateTemp("", "students_*.csv")
 	if err != nil {
 		utils.WriteMessageResponse(w, "Error creating file.", http.StatusInternalServerError)
+		return
 	}
 
 	defer f.Close()

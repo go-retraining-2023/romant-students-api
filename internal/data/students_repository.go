@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/RomanTykhyi/students-api/internal/di"
 	"github.com/RomanTykhyi/students-api/internal/models"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -14,56 +13,55 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-const TABLE_NAME = "Students"
-const PARTITION = "students"
-
-func retrieveDynamoClient() *dynamodb.Client {
-	client, err := di.GetAppContainer().Resolve("dynamo-client")
+func getStudentKeyMap(studentId string) (map[string]types.AttributeValue, error) {
+	partitionId, err := attributevalue.Marshal(partitionId)
 	if err != nil {
-		panic("Cannot get dynamo client")
-	}
-	return client.(*dynamodb.Client)
-}
-
-func getStudentKeyMap(studentId string) map[string]types.AttributeValue {
-	partitionId, err := attributevalue.Marshal(PARTITION)
-	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	id, err := attributevalue.Marshal(studentId)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return map[string]types.AttributeValue{"PartitionId": partitionId, "Id": id}
+	return map[string]types.AttributeValue{"PartitionId": partitionId, "Id": id}, nil
 }
+
+const (
+	tableName   = "Students"
+	partitionId = "students"
+)
 
 type StudentsStore interface {
 	PutStudent(student *models.Student) error
-	QueryStudents() []models.Student
-	GetStudent(id string) *models.Student
-	UpdateStudent(student *models.Student) *models.Student
-	DeleteStudent(id string) bool
+	QueryStudents() ([]models.Student, error)
+	GetStudent(id string) (*models.Student, error)
+	UpdateStudent(student *models.Student) (*models.Student, error)
+	DeleteStudent(id string) (bool, error)
 }
 
-type StudentsRepository struct{}
+type StudentsRepository struct {
+	dbClient *dynamodb.Client
+}
+
+func NewStudentsRepository(dbClient *dynamodb.Client) *StudentsRepository {
+	return &StudentsRepository{
+		dbClient: dbClient,
+	}
+}
 
 func (repo StudentsRepository) PutStudent(student *models.Student) error {
-	dbClient := retrieveDynamoClient()
+	student.PartitionId = partitionId
 
-	student.PartitionId = PARTITION
 	studentJson, err := attributevalue.MarshalMap(student)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%v", studentJson)
-
-	putOutput, err := dbClient.PutItem(
+	putOutput, err := repo.dbClient.PutItem(
 		context.TODO(),
 		&dynamodb.PutItemInput{
-			TableName:           aws.String(TABLE_NAME),
+			TableName:           aws.String(tableName),
 			Item:                studentJson,
 			ConditionExpression: aws.String("attribute_not_exists(PK)"),
 		},
@@ -78,111 +76,108 @@ func (repo StudentsRepository) PutStudent(student *models.Student) error {
 	return nil
 }
 
-func (repo StudentsRepository) QueryStudents() []models.Student {
-	dbClient := retrieveDynamoClient()
-
+func (repo StudentsRepository) QueryStudents() ([]models.Student, error) {
 	var response *dynamodb.QueryOutput
 	var students []models.Student
 
-	keyExpression := expression.Key("PartitionId").Equal(expression.Value(PARTITION))
+	keyExpression := expression.Key("PartitionId").Equal(expression.Value(partitionId))
 	expr, err := expression.NewBuilder().WithKeyCondition(keyExpression).Build()
 	if err != nil {
-		log.Fatal("Error building students query.")
+		return nil, err
 	}
 
-	response, err = dbClient.Query(context.TODO(), &dynamodb.QueryInput{
-		TableName:                 aws.String(TABLE_NAME),
+	response, err = repo.dbClient.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:                 aws.String(tableName),
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 	})
-
 	if err != nil {
 		log.Printf("Error occured: %v", err)
-		return nil
+		return nil, err
 	}
 
 	err = attributevalue.UnmarshalListOfMaps(response.Items, &students)
 	if err != nil {
-		log.Printf("Couldn't unmarshal query response. Here's why: %v\n", err)
+		return nil, err
 	}
 
-	return students
+	return students, err
 }
 
-func (repo StudentsRepository) GetStudent(id string) *models.Student {
-	dbClient := retrieveDynamoClient()
-
+func (repo StudentsRepository) GetStudent(id string) (*models.Student, error) {
 	student := models.Student{}
-	key := getStudentKeyMap(id)
+	key, err := getStudentKeyMap(id)
+	if err != nil {
+		return nil, err
+	}
 
-	output, err := dbClient.GetItem(
+	output, err := repo.dbClient.GetItem(
 		context.TODO(),
 		&dynamodb.GetItemInput{
 			Key:       key,
-			TableName: aws.String(TABLE_NAME),
+			TableName: aws.String(tableName),
 		})
-
 	if err != nil {
-		log.Fatal("Error while querying student.")
-	}
-
-	if output.Item == nil {
-		return nil
+		return nil, err
 	}
 
 	err = attributevalue.UnmarshalMap(output.Item, &student)
 	if err != nil {
-		log.Fatal("Error while deserializing student.")
+		return nil, err
 	}
 
-	return &student
+	return &student, nil
 }
 
-func (repo StudentsRepository) UpdateStudent(student *models.Student) *models.Student {
-	dbClient := retrieveDynamoClient()
-
-	key := getStudentKeyMap(student.Id)
+func (repo StudentsRepository) UpdateStudent(student *models.Student) (*models.Student, error) {
+	key, err := getStudentKeyMap(student.Id)
+	if err != nil {
+		return nil, err
+	}
 
 	update := expression.Set(expression.Name("FullName"), expression.Value(student.FullName))
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
 	if err != nil {
-		log.Fatal("Error while creating the update student expression.")
+		return nil, err
 	}
 
-	output, err := dbClient.UpdateItem(
+	output, err := repo.dbClient.UpdateItem(
 		context.TODO(),
 		&dynamodb.UpdateItemInput{
-			TableName:                 aws.String(TABLE_NAME),
+			TableName:                 aws.String(tableName),
 			Key:                       key,
 			ExpressionAttributeNames:  expr.Names(),
 			ExpressionAttributeValues: expr.Values(),
 			UpdateExpression:          expr.Update(),
 			ReturnValues:              types.ReturnValueUpdatedNew,
 		})
-
 	if err != nil {
-		log.Fatal("Error while updating student.")
+		return nil, err
 	}
 
 	err = attributevalue.UnmarshalMap(output.Attributes, &student)
 	if err != nil {
-		log.Fatal("Couldn't unmarshall update student response.")
+		return nil, err
 	}
-	return student
+	return student, nil
 }
 
-func (repo StudentsRepository) DeleteStudent(id string) bool {
-	dbClient := retrieveDynamoClient()
+func (repo StudentsRepository) DeleteStudent(id string) (bool, error) {
+	key, err := getStudentKeyMap(id)
+	if err != nil {
+		return false, nil
+	}
 
-	key := getStudentKeyMap(id)
-
-	deleteOutput, err := dbClient.DeleteItem(
+	_, err = repo.dbClient.DeleteItem(
 		context.TODO(),
 		&dynamodb.DeleteItemInput{
-			TableName: aws.String(TABLE_NAME),
+			TableName: aws.String(tableName),
 			Key:       key,
 		})
+	if err != nil {
+		return false, err
+	}
 
-	return err == nil && deleteOutput != nil
+	return true, nil
 }

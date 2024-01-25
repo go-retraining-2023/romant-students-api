@@ -19,3 +19,13 @@
 
 # Go workspace file
 go.work
+
+/deploy/volume
+/node_modules
+
+**/bootstrap
+
+**/package.json
+**/package-lock.json
+
+*.zip

@@ -15,8 +15,8 @@ func QueryStudents(w http.ResponseWriter, r *http.Request) {
 	}
 	studentsRepo := repo.(data.StudentsStore)
 
-	students := studentsRepo.QueryStudents()
-	if students == nil {
+	students, err := studentsRepo.QueryStudents()
+	if err != nil || students == nil {
 		utils.WriteMessageResponse(w, "Error occured", http.StatusInternalServerError)
 		return
 	}
